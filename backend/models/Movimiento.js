@@ -6,6 +6,7 @@ const MovimientoSchema = new mongoose.Schema({
   tipo: { type: String, enum: ["ENTRADA", "SALIDA"], required: true },
   fecha: { type: Date, default: Date.now },
   usuario: { type: String, default: "Operario_Almacen" }, // Aquí podrías luego meter login
+  almacen: { type: String, default: "CENTRAL" }, // Nuevo campo para el almacen
 });
 
 module.exports = mongoose.model("Movimiento", MovimientoSchema);
