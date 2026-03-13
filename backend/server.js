@@ -11,95 +11,56 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- CONFIGURACIÓN DE NODEMAILER ---
+// CONFIGURACIÓN DE CORREO
 const transporter = nodemailer.createTransport({
   service: "gmail",
-  auth: {
-    user: "jnebrijabasededatos@gmail.com",
-    pass: "vowjhgquzuditnqe", // Tu clave de 16 letras
-  },
+  auth: { user: "jnebrijabasededatos@gmail.com", pass: "vowjhgquzuditnqe" },
 });
 
-const enviarAlertaStock = async (sku, stockActual) => {
+const enviarAlerta = async (sku, stock) => {
+  const material = await Material.findOne({ sku });
   const mailOptions = {
-    from: "jnebrijabasededatos@gmail.com", // Remitente
-    to: "jnebrijabasededatos@gmail.com", // Destinatario (Tú mismo)
-    subject: `🚨 ALERTA: Stock Crítico en SKU ${sku}`,
-    html: `
-      <div style="font-family: sans-serif; border: 2px solid #d32f2f; padding: 20px; border-radius: 10px;">
-        <h2 style="color: #d32f2f;">Reposición Urgente</h2>
-        <p>El material <b>${sku}</b> ha bajado del límite de seguridad.</p>
-        <p>Stock actual: <span style="font-size: 20px; color: red;"><b>${stockActual}</b></span></p>
-      </div>
-    `,
+    from: "SGA CaPaNiWa Tech",
+    to: "jnebrijabasededatos@gmail.com",
+    subject: `⚠️ ALERTA DE STOCK BAJO: ${sku}`,
+    html: `<h2>Aviso de Inventario Crítico</h2><p>El producto <b>${sku}</b> ha bajado de las 5 unidades. Stock actual: <b>${stock}</b>.</p>`
   };
-
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(
-      "✅ Correo enviado correctamente a jnebrijabasededatos@gmail.com",
-    );
-  } catch (error) {
-    console.error("❌ Error enviando correo:", error.message);
-  }
+  transporter.sendMail(mailOptions);
 };
 
-// --- CONEXIÓN BD ---
-mongoose
-  .connect("mongodb://localhost:27017/sga_db")
-  .then(() => console.log("📦 Conectado a MongoDB"))
-  .catch((err) => console.error(err));
+// CONEXIÓN DB
+mongoose.connect("mongodb://localhost:27017/sga_db");
 
-// --- RUTAS ---
-
-app.get("/api/stock", async (req, res) => {
-  const materiales = await Material.find();
-  res.json(materiales);
-});
-
-app.get("/api/historial", async (req, res) => {
-  const movimientos = await Movimiento.find().sort({ fecha: -1 });
-  res.json(movimientos);
-});
+app.get("/api/stock", async (req, res) => res.json(await Material.find()));
+app.get("/api/historial", async (req, res) => res.json(await Movimiento.find().sort({ fecha: -1 })));
 
 app.post("/api/material", async (req, res) => {
   const nuevo = new Material(req.body);
   await nuevo.save();
-  res.json({ message: "Creado" });
+  res.json(nuevo);
 });
 
 app.put("/api/movimiento/:sku", async (req, res) => {
   const { cantidad, usuario, almacen } = req.body;
-
-  // Actualizado para evitar el warning de Mongoose
   const material = await Material.findOneAndUpdate(
     { sku: req.params.sku },
     { $inc: { stock: cantidad } },
-    { returnDocument: "after" },
+    { new: true }
   );
-
   if (material) {
-    const nuevoMov = new Movimiento({
-      sku: material.sku,
-      cantidad: Math.abs(cantidad),
-      tipo: cantidad > 0 ? "ENTRADA" : "SALIDA",
-      usuario: usuario,
-      almacen: almacen,
+    const mov = new Movimiento({ 
+      sku: material.sku, 
+      cantidad: Math.abs(cantidad), 
+      tipo: cantidad > 0 ? "ENTRADA" : "SALIDA", 
+      usuario, 
+      almacen 
     });
-    await nuevoMov.save();
-
-    // Lógica de alerta
-    if (cantidad < 0 && material.stock < 5) {
-      console.log(`Intentando enviar alerta para ${material.sku}...`);
-      enviarAlertaStock(material.sku, material.stock);
-    }
-
+    await mov.save();
+    if (material.stock < 5) enviarAlerta(material.sku, material.stock);
     res.json(material);
   } else {
-    res.status(404).json({ message: "No encontrado" });
+    res.status(404).send("SKU no encontrado");
   }
 });
 
-app.listen(5000, () =>
-  console.log("🚀 Servidor SGA funcionando en puerto 5000"),
-);
+app.listen(5000, () => console.log("Servidor CaPaNiWa activo en puerto 5000"));

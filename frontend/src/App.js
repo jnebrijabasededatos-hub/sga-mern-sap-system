@@ -24,359 +24,266 @@ ChartJS.register(
   Legend,
 );
 
-// --- COMPONENTE: LOGIN ---
-function Login({ onLogin }) {
-  const [user, setUser] = useState("");
-  const [pass, setPass] = useState("");
-  const handleEntrar = () => {
-    if (user === "admin" && pass === "1234")
-      onLogin({ nombre: "Admin-SAP", rol: "ADMIN" });
-    else if (user === "operario" && pass === "4321")
-      onLogin({ nombre: "Operario-Almacen", rol: "OPERARIO" });
-    else alert("Credenciales incorrectas");
-  };
+const COLORES = {
+  primario: "#14b8a6",
+  oscuro: "#0d2b4d",
+  fondo: "#f1f5f9",
+  blanco: "#ffffff",
+  rojo: "#ef4444",
+  verde: "#10b981",
+};
+
+// IMPORTANTE: Al estar en /public, la ruta es simplemente "/"
+const LOGO_LOCAL = "/CaPaNiWa.png";
+
+function Login({ alEntrar }) {
+  const [usuario, setUsuario] = useState("");
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "#f1f5f9",
-      }}
-    >
-      <div className="sap-card" style={{ width: "350px", textAlign: "center" }}>
-        <h2 style={{ color: "#003366" }}>SGA ENTERPRISE LOGON</h2>
-        <div
-          className="sap-form"
-          style={{ display: "flex", flexDirection: "column", gap: "15px" }}
-        >
-          <input
-            placeholder="Usuario"
-            onChange={(e) => setUser(e.target.value)}
+    <div className="contenedor-login">
+      <div className="tarjeta-login">
+        <div className="contenedor-logo-gigante">
+          <img
+            src={LOGO_LOCAL}
+            alt="Logo CaPaNiWa"
+            className="logo-login-gigante"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src =
+                "https://via.placeholder.com/600x300?text=CaPaNiWa+Tech";
+            }}
           />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            onChange={(e) => setPass(e.target.value)}
-          />
-          <button className="sap-btn-primary" onClick={handleEntrar}>
-            Acceder
-          </button>
+        </div>
+        <div className="seccion-datos-login">
+          <h1
+            style={{
+              color: COLORES.oscuro,
+              margin: "0 0 5px 0",
+              fontSize: "28px",
+            }}
+          >
+            CaPaNiWa Tech
+          </h1>
+          <p
+            style={{ color: "#64748b", fontSize: "14px", marginBottom: "25px" }}
+          >
+            Gestión de Inventarios 2026
+          </p>
+          <div className="formulario-login">
+            <input
+              placeholder="Nombre de Usuario"
+              onChange={(e) => setUsuario(e.target.value)}
+            />
+            <input type="password" placeholder="Contraseña de Acceso" />
+            <button
+              className="boton-primario"
+              onClick={() =>
+                alEntrar({
+                  nombre: usuario,
+                  rol: usuario === "admin" ? "ADMIN" : "OPERARIO",
+                })
+              }
+            >
+              INGRESAR AL SISTEMA
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// --- DASHBOARD ---
-function Dashboard({ materiales, setTab }) {
-  const stockTotal = materiales.reduce((acc, curr) => acc + curr.stock, 0);
-  const stockCritico = materiales.filter((m) => m.stock < 5);
-  const dataGrafico = {
+function PanelControl({ materiales, historial }) {
+  const stockTotal = materiales.reduce((acc, m) => acc + m.stock, 0);
+  const movPorAlmacen = historial.reduce((acc, mov) => {
+    const loc = mov.almacen || "CENTRAL";
+    acc[loc] = (acc[loc] || 0) + 1;
+    return acc;
+  }, {});
+
+  const datosGrafico = {
     labels: materiales.map((m) => m.sku),
     datasets: [
       {
         label: "Stock Actual",
         data: materiales.map((m) => m.stock),
-        backgroundColor: materiales.map((m) =>
-          m.stock < 5 ? "rgba(211, 47, 47, 0.7)" : "rgba(10, 110, 209, 0.7)",
-        ),
-        borderColor: materiales.map((m) =>
-          m.stock < 5 ? "#d32f2f" : "#0a6ed1",
-        ),
-        borderWidth: 1,
+        backgroundColor: COLORES.primario,
+        borderRadius: 8,
       },
     ],
   };
+
   return (
-    <div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "20px",
-          marginBottom: "30px",
-        }}
-      >
-        <div
-          className="sap-kpi-card"
-          style={{ borderLeft: "5px solid #0a6ed1" }}
-        >
-          <small>SKUs TOTALES</small>
+    <div className="animar-entrada">
+      <div className="fila-kpi">
+        <div className="tarjeta-kpi">
+          <span>Inventario Total</span>
+          <h3>
+            {stockTotal} <small>uds</small>
+          </h3>
+        </div>
+        <div className="tarjeta-kpi">
+          <span>Modelos (SKU)</span>
           <h3>{materiales.length}</h3>
         </div>
         <div
-          className="sap-kpi-card"
-          style={{ borderLeft: "5px solid #2e7d32" }}
+          className="tarjeta-kpi"
+          style={{ borderLeft: `5px solid ${COLORES.primario}` }}
         >
-          <small>STOCK FÍSICO</small>
-          <h3>{stockTotal} UN</h3>
-        </div>
-        <div
-          className="sap-kpi-card"
-          style={{ borderLeft: "5px solid #d32f2f" }}
-        >
-          <small>STOCK CRÍTICO</small>
-          <h3
-            style={{ color: stockCritico.length > 0 ? "#d32f2f" : "inherit" }}
-          >
-            {stockCritico.length}
-          </h3>
+          <span>Servidor</span>
+          <h3 style={{ color: COLORES.primario }}>CONECTADO</h3>
         </div>
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1.2fr",
-          gap: "25px",
-        }}
-      >
-        <div className="sap-card">
-          <Bar data={dataGrafico} options={{ responsive: true }} />
+      <div className="cuadricula-dashboard">
+        <div className="tarjeta-blanca">
+          <h3>📊 Niveles de Existencias</h3>
+          <div style={{ height: "280px" }}>
+            <Bar data={datosGrafico} options={{ maintainAspectRatio: false }} />
+          </div>
         </div>
-        <div className="sap-card" style={{ borderTop: "4px solid #d32f2f" }}>
-          <h3 style={{ color: "#d32f2f", fontSize: "16px", marginTop: 0 }}>
-            ⚠️ Alertas
-          </h3>
-          {stockCritico.length > 0 ? (
-            stockCritico.map((m) => (
-              <div
-                key={m.sku}
-                className="sap-alert-item"
-                onClick={() => setTab("inventario")}
-              >
-                <strong>{m.sku}</strong>: {m.stock} unidades.
+        <div className="tarjeta-blanca">
+          <h3>📍 Actividad de Almacenes</h3>
+          {Object.entries(movPorAlmacen).map(([nombre, total]) => (
+            <div key={nombre} className="item-calor">
+              <div className="info-calor">
+                <span>{nombre}</span>
+                <span>{total} movs.</span>
               </div>
-            ))
-          ) : (
-            <p>Stock saludable.</p>
-          )}
+              <div className="barra-progreso">
+                <div
+                  className="relleno-progreso"
+                  style={{
+                    width: `${(total / (historial.length || 1)) * 100}%`,
+                    background: COLORES.oscuro,
+                  }}
+                ></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
-// --- MB52 (STOCK) ---
-function Inventario({ materiales }) {
-  const [busqueda, setBusqueda] = useState("");
-  const filtrados = materiales.filter(
-    (m) =>
-      m.sku.toLowerCase().includes(busqueda.toLowerCase()) ||
-      m.descripcion.toLowerCase().includes(busqueda.toLowerCase()),
-  );
-  return (
-    <div className="sap-card">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-        }}
-      >
-        <h2>📊 MB52 - Listado de Stock</h2>
-        <input
-          className="sap-search-input"
-          placeholder="🔍 Buscar..."
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
-      </div>
-      <table className="sap-table">
-        <thead>
-          <tr>
-            <th>Material</th>
-            <th>Descripción</th>
-            <th>Stock Global</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtrados.map((m) => (
-            <tr key={m.sku}>
-              <td>
-                <b>{m.sku}</b>
-              </td>
-              <td>{m.descripcion}</td>
-              <td>{m.stock}</td>
-              <td>
-                <span
-                  className="sap-badge"
-                  style={{
-                    background: m.stock < 5 ? "#fee2e2" : "#e0f2fe",
-                    color: m.stock < 5 ? "#991b1b" : "#0369a1",
-                  }}
-                >
-                  {m.stock < 5 ? "BAJO" : "OK"}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// --- MIGO (MOVIMIENTOS MULTIALMACÉN) ---
-function Movimientos({ refrescar, materiales, usuarioActual }) {
+function Movimientos({ refrescar, usuarioActual }) {
   const [form, setForm] = useState({
     sku: "",
     cantidad: "",
     almacen: "CENTRAL",
   });
-  const [showScanner, setShowScanner] = useState(false);
-  const almacenes = ["CENTRAL", "TIENDA_A", "DEVOLUCIONES", "PUESTA_EN_MARCHA"];
+  const [verEscaner, setVerEscaner] = useState(false);
 
-  const procesarMovimiento = async (tipo) => {
-    const cant = Number(form.cantidad);
-    if (!form.sku || cant <= 0) return alert("Datos inválidos.");
-
-    if (tipo === "SALIDA") {
-      const mat = materiales.find((m) => m.sku === form.sku);
-      if (!mat || mat.stock < cant) return alert("❌ Stock insuficiente.");
-    }
-
+  const ejecutarMovimiento = async (tipo) => {
+    if (!form.sku || !form.cantidad)
+      return alert("Por favor, rellena todos los campos");
+    const qty =
+      tipo === "SALIDA" ? -Math.abs(form.cantidad) : Math.abs(form.cantidad);
     try {
       await axios.put(`http://localhost:5000/api/movimiento/${form.sku}`, {
-        cantidad: tipo === "SALIDA" ? -Math.abs(cant) : Math.abs(cant),
+        cantidad: qty,
         usuario: usuarioActual.nombre,
         almacen: form.almacen,
       });
-      alert(`✅ Movimiento registrado en ${form.almacen}`);
-      setForm({ ...form, sku: "", cantidad: "" });
+      alert(`Éxito: Registro de ${tipo} completado`);
+      setForm({ sku: "", cantidad: "", almacen: "CENTRAL" });
       refrescar();
-    } catch (err) {
-      alert("❌ Error.");
+    } catch (e) {
+      alert("Error: El código SKU no existe");
     }
   };
 
   return (
-    <div className="sap-card">
-      <h2>🚚 MIGO - Movimiento de Mercancía</h2>
-      <div className="sap-form" style={{ display: "grid", gap: "15px" }}>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <select
-            value={form.almacen}
-            onChange={(e) => setForm({ ...form, almacen: e.target.value })}
-            style={{ flex: 1, padding: "10px" }}
-          >
-            {almacenes.map((a) => (
-              <option key={a} value={a}>
-                📍 Almacén: {a}
-              </option>
-            ))}
-          </select>
-          <button
-            className="sap-btn-secondary"
-            onClick={() => setShowScanner(!showScanner)}
-          >
-            📷 Escanear
-          </button>
-        </div>
-        {showScanner && (
+    <div className="tarjeta-blanca animar-entrada">
+      <h2>🚚 Registro de Entradas y Salidas</h2>
+      <button
+        className="boton-escaner"
+        onClick={() => setVerEscaner(!verEscaner)}
+      >
+        📷 Escanear Código QR
+      </button>
+      {verEscaner && (
+        <div className="caja-escaner">
           <Scanner
             onResult={(res) => {
               setForm({ ...form, sku: res });
-              setShowScanner(false);
+              setVerEscaner(false);
             }}
           />
-        )}
-        <input
-          placeholder="SKU"
-          value={form.sku}
-          onChange={(e) => setForm({ ...form, sku: e.target.value })}
-        />
-        <input
-          type="number"
-          placeholder="Cantidad"
-          value={form.cantidad}
-          onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
-        />
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="sap-btn-primary"
-            style={{ background: "#16a34a", flex: 1 }}
-            onClick={() => procesarMovimiento("ENTRADA")}
-          >
-            📥 Entrada
-          </button>
-          <button
-            className="sap-btn-primary"
-            style={{ background: "#dc2626", flex: 1 }}
-            onClick={() => procesarMovimiento("SALIDA")}
-          >
-            📤 Salida
-          </button>
         </div>
+      )}
+      <div className="layout-formulario">
+        <div className="campo">
+          <label>Código SKU</label>
+          <input
+            value={form.sku}
+            onChange={(e) => setForm({ ...form, sku: e.target.value })}
+          />
+        </div>
+        <div className="campo">
+          <label>Cantidad</label>
+          <input
+            type="number"
+            value={form.cantidad}
+            onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
+          />
+        </div>
+        <div className="campo">
+          <label>Destino/Origen</label>
+          <select
+            value={form.almacen}
+            onChange={(e) => setForm({ ...form, almacen: e.target.value })}
+          >
+            <option value="CENTRAL">Almacén Central</option>
+            <option value="LAB_A">Laboratorio A</option>
+            <option value="TIENDA">Tienda Física</option>
+            <option value="ANULACIONES">⚠️ ANULACIONES</option>
+          </select>
+        </div>
+      </div>
+      <div className="grupo-botones">
+        <button
+          onClick={() => ejecutarMovimiento("ENTRADA")}
+          className="btn-entrada"
+        >
+          📥 ENTRADA DE STOCK
+        </button>
+        <button
+          onClick={() => ejecutarMovimiento("SALIDA")}
+          className="btn-salida"
+        >
+          📤 SALIDA DE STOCK
+        </button>
       </div>
     </div>
   );
 }
 
-// --- MB51 (HISTORIAL COMPLETO) ---
 function Historial({ datos }) {
-  const exportarPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Reporte MB51 - Auditoría SGA", 14, 15);
-    autoTable(doc, {
-      startY: 20,
-      head: [["Fecha", "SKU", "Tipo", "Cant", "Almacén", "Usuario"]],
-      body: datos.map((h) => [
-        new Date(h.fecha).toLocaleString(),
-        h.sku,
-        h.tipo,
-        h.cantidad,
-        h.almacen,
-        h.usuario,
-      ]),
-    });
-    doc.save("MB51_Reporte.pdf");
-  };
   return (
-    <div className="sap-card">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "15px",
-        }}
-      >
-        <h2>📜 MB51 - Documentos de Material</h2>
-        <button className="sap-btn-pdf" onClick={exportarPDF}>
-          Exportar PDF
-        </button>
-      </div>
-      <table className="sap-table">
+    <div className="tarjeta-blanca animar-entrada">
+      <h2>📜 Registro Histórico (Auditoría)</h2>
+      <table className="tabla-moderna">
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>SKU</th>
+            <th>Fecha y Hora</th>
+            <th>Producto</th>
             <th>Tipo</th>
-            <th>Cant</th>
-            <th>Almacén</th>
-            <th>Usuario</th>
+            <th>Cantidad</th>
+            <th>Ubicación</th>
           </tr>
         </thead>
         <tbody>
           {datos.map((h, i) => (
             <tr key={i}>
               <td>{new Date(h.fecha).toLocaleString()}</td>
-              <td>{h.sku}</td>
-              <td
-                style={{ color: h.tipo === "ENTRADA" ? "#16a34a" : "#dc2626" }}
-              >
-                {h.tipo}
+              <td>
+                <b>{h.sku}</b>
+              </td>
+              <td>
+                <span className={`etiqueta ${h.tipo}`}>{h.tipo}</span>
               </td>
               <td>{h.cantidad}</td>
-              <td>
-                <span className="sap-badge" style={{ background: "#f1f5f9" }}>
-                  {h.almacen}
-                </span>
-              </td>
-              <td>
-                <small>{h.usuario}</small>
-              </td>
+              <td>{h.almacen}</td>
             </tr>
           ))}
         </tbody>
@@ -385,187 +292,181 @@ function Historial({ datos }) {
   );
 }
 
-// --- MM01 (ADMIN + QR) ---
-function MaestroMaterial({ alCrear }) {
-  const [nuevo, setNuevo] = useState({ sku: "", descripcion: "" });
-  const [ultimoQR, setUltimoQR] = useState(null);
+function Maestro({ alCrear }) {
+  const [sku, setSku] = useState("");
+  const [desc, setDesc] = useState("");
+  const [prov, setProv] = useState("CaPaNiWa Tech");
+  const [creado, setCreado] = useState(false);
 
-  const guardar = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post("http://localhost:5000/api/material", nuevo);
-      setUltimoQR(nuevo.sku);
-      alert("✅ Material Creado");
-      alCrear();
-    } catch (err) {
-      alert("Error");
-    }
+  const guardar = async () => {
+    await axios.post("http://localhost:5000/api/material", {
+      sku,
+      descripcion: desc,
+      proveedor: prov,
+      stock: 0,
+    });
+    setCreado(true);
+    alCrear();
   };
 
   return (
-    <div className="sap-card">
-      <h2>🛠️ MM01 - Creación de Material</h2>
-      <form onSubmit={guardar} className="sap-form">
-        <input
-          placeholder="SKU"
-          value={nuevo.sku}
-          onChange={(e) => setNuevo({ ...nuevo, sku: e.target.value })}
-          required
-        />
-        <input
-          placeholder="Descripción"
-          value={nuevo.descripcion}
-          onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })}
-          required
-        />
-        <button className="sap-btn-primary" type="submit">
-          Grabar Material
-        </button>
-      </form>
-      {ultimoQR && (
-        <div
-          style={{
-            marginTop: "25px",
-            textAlign: "center",
-            border: "1px dashed #0a6ed1",
-            padding: "15px",
-          }}
-        >
-          <h4>🏷️ QR Generado para {ultimoQR}</h4>
-          <QRCodeSVG value={ultimoQR} size={120} />
-          <br />
-          <button
-            className="sap-btn-secondary"
-            style={{ marginTop: "10px" }}
-            onClick={() => window.print()}
-          >
-            Imprimir Etiqueta
-          </button>
+    <div className="tarjeta-blanca animar-entrada">
+      <h2>🛠 Registro de Nuevos Materiales</h2>
+      <div className="layout-formulario">
+        <div className="campo">
+          <label>SKU (Código único)</label>
+          <input onChange={(e) => setSku(e.target.value)} />
+        </div>
+        <div className="campo">
+          <label>Descripción del Producto</label>
+          <input onChange={(e) => setDesc(e.target.value)} />
+        </div>
+        <div className="campo">
+          <label>Proveedor Asignado</label>
+          <select onChange={(e) => setProv(e.target.value)}>
+            <option value="CaPaNiWa Tech">CaPaNiWa Tech</option>
+            <option value="Logística Global">Logística Global</option>
+          </select>
+        </div>
+      </div>
+      <button onClick={guardar} className="boton-primario">
+        REGISTRAR EN MAESTRO
+      </button>
+      {creado && (
+        <div className="caja-qr">
+          <p>Código Generado para {sku}:</p>
+          <QRCodeSVG value={sku} size={100} />
         </div>
       )}
     </div>
   );
 }
 
-// --- APP ---
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [usuario, setUsuario] = useState(null);
   const [materiales, setMateriales] = useState([]);
   const [historial, setHistorial] = useState([]);
-  const [tab, setTab] = useState("dashboard");
+  const [seccion, setSeccion] = useState("dashboard");
 
-  const fetchData = async () => {
+  const cargarDatos = async () => {
     try {
       const rs = await axios.get("http://localhost:5000/api/stock");
       const rh = await axios.get("http://localhost:5000/api/historial");
       setMateriales(rs.data);
       setHistorial(rh.data);
     } catch (e) {
-      console.error("Error");
+      console.error("Error conectando con la API");
     }
   };
 
   useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
+    if (usuario) cargarDatos();
+  }, [usuario]);
 
-  if (!user) return <Login onLogin={setUser} />;
+  if (!usuario) return <Login alEntrar={setUsuario} />;
 
   return (
-    <div
-      style={{
-        background: "#f1f5f9",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily: "sans-serif",
-      }}
-    >
-      <header
-        style={{
-          background: "#003366",
-          color: "white",
-          padding: "12px 25px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1>SAP SGA | {user.rol}</h1>
-        <div>
-          👤 {user.nombre} |{" "}
-          <button
-            onClick={() => setUser(null)}
-            style={{
-              background: "none",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              textDecoration: "underline",
-            }}
-          >
+    <div className="contenedor-app">
+      <header className="cabecera">
+        <div className="marca">
+          <img src={LOGO_LOCAL} alt="CPNW" style={{ height: "40px" }} />
+          <h1>
+            CaPaNiWa{" "}
+            <span style={{ fontWeight: 300, color: "white" }}>Tech</span>
+          </h1>
+        </div>
+        <div className="usuario-info">
+          <span>
+            Bienvenido, <b>{usuario.nombre}</b>
+          </span>
+          <button className="btn-salir" onClick={() => setUsuario(null)}>
             Salir
           </button>
         </div>
       </header>
-      <nav className="sap-nav">
+      <nav className="navegacion">
         <button
-          onClick={() => setTab("dashboard")}
-          className={tab === "dashboard" ? "active" : ""}
+          onClick={() => setSeccion("dashboard")}
+          className={seccion === "dashboard" ? "activo" : ""}
         >
-          🏠 Dashboard
+          Panel Control
         </button>
         <button
-          onClick={() => setTab("inventario")}
-          className={tab === "inventario" ? "active" : ""}
+          onClick={() => setSeccion("migo")}
+          className={seccion === "migo" ? "activo" : ""}
         >
-          📊 MB52
+          Movimientos
         </button>
         <button
-          onClick={() => setTab("migo")}
-          className={tab === "migo" ? "active" : ""}
+          onClick={() => setSeccion("mb51")}
+          className={seccion === "mb51" ? "activo" : ""}
         >
-          🚚 MIGO
+          Historial
         </button>
-        <button
-          onClick={() => setTab("mb51")}
-          className={tab === "mb51" ? "active" : ""}
-        >
-          📜 MB51
-        </button>
-        {user.rol === "ADMIN" && (
+        {usuario.rol === "ADMIN" && (
           <button
-            onClick={() => setTab("mm01")}
-            className={tab === "mm01" ? "active" : ""}
+            onClick={() => setSeccion("mm01")}
+            className={seccion === "mm01" ? "activo" : ""}
           >
-            🛠️ MM01
+            Maestro Materiales
           </button>
         )}
       </nav>
-      <main style={{ padding: "25px", flex: 1 }}>
-        {tab === "dashboard" && (
-          <Dashboard materiales={materiales} setTab={setTab} />
+      <main className="contenido">
+        {seccion === "dashboard" && (
+          <PanelControl materiales={materiales} historial={historial} />
         )}
-        {tab === "inventario" && <Inventario materiales={materiales} />}
-        {tab === "migo" && (
-          <Movimientos
-            refrescar={fetchData}
-            materiales={materiales}
-            usuarioActual={user}
-          />
+        {seccion === "migo" && (
+          <Movimientos refrescar={cargarDatos} usuarioActual={usuario} />
         )}
-        {tab === "mb51" && <Historial datos={historial} />}
-        {tab === "mm01" && user.rol === "ADMIN" && (
-          <MaestroMaterial alCrear={fetchData} />
-        )}
+        {seccion === "mb51" && <Historial datos={historial} />}
+        {seccion === "mm01" && <Maestro alCrear={cargarDatos} />}
       </main>
-      <footer className="sap-footer">
-        <div>© 2024 SGA SAP MERN</div>
-        <div>
-          Almacén Actual: {user.rol === "ADMIN" ? "GLOBAL" : "SECTORIZADO"}
-        </div>
-      </footer>
-      <style>{`.sap-nav { background: white; display: flex; border-bottom: 2px solid #e2e8f0; }.sap-nav button { padding: 16px 25px; border: none; background: none; cursor: pointer; font-weight: bold; color: #64748b; border-bottom: 3px solid transparent; }.sap-nav button.active { color: #0a6ed1; border-bottom: 3px solid #0a6ed1; }.sap-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #0a6ed1; margin-bottom: 20px; }.sap-table { width: 100%; border-collapse: collapse; }.sap-table th { background: #f8fafc; padding: 12px; text-align: left; font-size: 13px; border-bottom: 2px solid #e2e8f0; }.sap-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }.sap-kpi-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }.sap-alert-item { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-bottom: 8px; }.sap-btn-primary { background: #0a6ed1; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }.sap-btn-secondary { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 8px 15px; border-radius: 4px; cursor: pointer; }.sap-btn-pdf { background: #991b1b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }.sap-form input, .sap-form select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; }.sap-search-input { padding: 8px 15px; border-radius: 20px; border: 1px solid #cbd5e1; width: 250px; }.sap-footer { background: #1e293b; color: #94a3b8; padding: 15px 25px; font-size: 12px; display: flex; justify-content: space-between; border-top: 4px solid #0a6ed1; }.sap-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }`}</style>
+      <style>{`
+        body { margin: 0; font-family: 'Inter', sans-serif; background: ${COLORES.fondo}; }
+        .cabecera { background: ${COLORES.oscuro}; color: white; padding: 10px 40px; display: flex; justify-content: space-between; align-items: center; }
+        .marca { display: flex; align-items: center; gap: 15px; }
+        .marca h1 { margin: 0; font-size: 24px; color: ${COLORES.primario}; }
+        .navegacion { background: white; padding: 0 40px; display: flex; gap: 25px; border-bottom: 1px solid #e2e8f0; }
+        .navegacion button { padding: 18px 0; border: none; background: none; font-weight: bold; cursor: pointer; color: #64748b; font-size: 15px; }
+        .navegacion button.activo { color: ${COLORES.primario}; border-bottom: 3px solid ${COLORES.primario}; }
+        .contenido { padding: 30px 40px; max-width: 1200px; margin: 0 auto; }
+        .tarjeta-blanca { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .fila-kpi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px; }
+        .tarjeta-kpi { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .tarjeta-kpi span { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .tarjeta-kpi h3 { margin: 10px 0 0; font-size: 28px; color: ${COLORES.oscuro}; }
+        .cuadricula-dashboard { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .item-calor { margin-bottom: 15px; }
+        .info-calor { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; }
+        .barra-progreso { background: #f1f5f9; height: 10px; border-radius: 10px; overflow: hidden; margin-top: 6px; }
+        .relleno-progreso { height: 100%; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .layout-formulario { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 25px 0; }
+        .campo label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 8px; color: #475569; }
+        input, select { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 15px; }
+        .grupo-botones { display: flex; gap: 20px; }
+        .btn-entrada { background: ${COLORES.verde}; color: white; flex: 1; padding: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-salida { background: ${COLORES.rojo}; color: white; flex: 1; padding: 18px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .boton-primario { background: ${COLORES.primario}; color: white; border: none; padding: 16px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .boton-escaner { background: ${COLORES.oscuro}; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; }
+        .tabla-moderna { width: 100%; border-collapse: collapse; }
+        .tabla-moderna th { text-align: left; padding: 18px; background: #f8fafc; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0; }
+        .tabla-moderna td { padding: 18px; border-bottom: 1px solid #f1f5f9; }
+        .etiqueta { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+        .ENTRADA { background: #dcfce7; color: #166534; }
+        .SALIDA { background: #fee2e2; color: #991b1b; }
+        .btn-salir { background: #ffffff22; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-left: 15px; font-weight: bold; }
+        
+        /* DISEÑO LOGIN GIGANTE IMPACTANTE */
+        .contenedor-login { height: 100vh; background: ${COLORES.oscuro}; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .tarjeta-login { background: white; border-radius: 50px; width: 100%; max-width: 900px; height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 50px 100px rgba(0,0,0,0.6); }
+        .contenedor-logo-gigante { flex: 3; background: #fff; display: flex; align-items: center; justify-content: center; padding: 40px; }
+        .logo-login-gigante { width: 100%; height: 100%; object-fit: contain; transform: scale(1.1); }
+        .seccion-datos-login { flex: 2; padding: 40px; display: flex; flex-direction: column; align-items: center; background: #f8fafc; border-top: 1px solid #eee; }
+        .formulario-login { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 15px; }
+        .animar-entrada { animation: aparecer 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+        @keyframes aparecer { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
 }

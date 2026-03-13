@@ -1,12 +1,9 @@
-// backend/models/Material.js
 const mongoose = require("mongoose");
-
 const MaterialSchema = new mongoose.Schema({
   sku: { type: String, required: true, unique: true },
-  descripcion: { type: String, required: true },
+  descripcion: String,
   stock: { type: Number, default: 0 },
-  ubicacion: { type: String, default: "RECEPCION" },
-  unidad: { type: String, default: "ST" }, // ST = Unidades en SAP
+  proveedor: String,
+  fecha: { type: Date, default: Date.now },
 });
-
 module.exports = mongoose.model("Material", MaterialSchema);
